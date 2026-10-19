@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gitdrop</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#0b6b52">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gitdrop">
+<style>
+:root{--bg:#f4f6f5;--card:#fff;--ink:#15211c;--mute:#667770;--line:#dde4e0;--acc:#0b6b52;--accink:#fff;--warn:#b4531a;--err:#b3261e;--r:14px;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0f1512;--card:#18201c;--ink:#e8f0ec;--mute:#8da096;--line:#27332d;--acc:#3ecf9e;--accink:#06251b;--warn:#e89a5d;--err:#ff8a80;color-scheme:dark}}
+:root[data-theme=dark]{--bg:#0f1512;--card:#18201c;--ink:#e8f0ec;--mute:#8da096;--line:#27332d;--acc:#3ecf9e;--accink:#06251b;--warn:#e89a5d;--err:#ff8a80;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{padding:env(safe-area-inset-top,0) 0 calc(96px + env(safe-area-inset-bottom,0))}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 6px;max-width:640px;margin:auto}
+h1{font-size:22px;margin:0;letter-spacing:-.02em}
+h2{font-size:15px;margin:0 0 10px}
+main{max-width:640px;margin:auto;padding:8px 16px 16px;display:grid;gap:14px}
+section{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+label{display:block;font-size:13px;color:var(--mute);margin-bottom:10px}
+label:last-child{margin-bottom:0}
+input[type=text],input[type=password],input:not([type]),textarea{width:100%;margin-top:4px;padding:11px 12px;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px}
+input:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{font:inherit;color:inherit;cursor:pointer}
+.icon{background:none;border:0;padding:8px;border-radius:10px;color:var(--ink);display:inline-grid}
+.icon svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.link{background:none;border:0;padding:4px 0;color:var(--acc);font-size:14px;font-weight:600}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:11px 16px;font-weight:600}
+.btn.pri{background:var(--acc);color:var(--accink);border-color:var(--acc)}
+.btn:disabled{opacity:.45}
+.pick{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;padding:22px 12px;border:1.5px dashed var(--acc);border-radius:var(--r);background:none;color:var(--acc);font-weight:600}
+.pick small{color:var(--mute);font-weight:400}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px;margin-top:14px}
+.seg button{border:0;background:none;padding:9px;border-radius:9px;font-size:14px;color:var(--mute);font-weight:600}
+.seg button[aria-pressed=true]{background:var(--card);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 0;font-size:15px;color:var(--ink)}
+.sw input{appearance:none;width:44px;height:26px;border-radius:13px;background:var(--line);position:relative;flex:none;margin:0;transition:background .15s}
+.sw input::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s}
+.sw input:checked{background:var(--acc)}
+.sw input:checked::after{transform:translateX(18px)}
+.sum{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.sum span{color:var(--mute);font-size:13px}
+.grp{margin-top:12px;font-size:13px;font-weight:700;color:var(--acc);display:flex;justify-content:space-between}
+.grp i{font-style:normal;color:var(--mute);font-weight:500}
+.f{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 0}
+.f:last-child{border-bottom:0}
+.f b{font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.f small{color:var(--mute);flex:none}
+.tag{font-size:11px;padding:2px 7px;border-radius:99px;border:1px solid var(--warn);color:var(--warn);flex:none}
+.f.dup b{color:var(--mute);text-decoration:line-through}
+.empty{color:var(--mute);text-align:center;padding:10px 0;margin:0;font-size:14px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0))}
+.bar div{max-width:640px;margin:auto;display:flex;gap:10px}
+.bar input{margin:0;flex:1;min-width:0}
+.bar .btn{white-space:nowrap}
+.prog{position:absolute;left:0;top:-1px;height:3px;background:var(--acc);width:0;transition:width .2s}
+dialog{width:min(560px,100%);max-width:100%;margin:auto auto 0;border:0;border-radius:20px 20px 0 0;background:var(--card);color:var(--ink);padding:18px 18px calc(18px + env(safe-area-inset-bottom,0));max-height:88vh;overflow:auto}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog .acts{display:flex;gap:10px;margin-top:14px}
+dialog .acts .btn{flex:1}
+.rule{display:grid;grid-template-columns:1fr 2fr auto;gap:8px;align-items:end;margin-bottom:8px}
+.rule label{margin:0}
+.hint{font-size:13px;color:var(--mute);margin:8px 0 0}
+.hint a{color:var(--acc)}
+.h{padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.h a{color:var(--acc);font-weight:600}
+.h small{color:var(--mute);display:block}
+.toast{position:fixed;left:16px;right:16px;bottom:calc(90px + env(safe-area-inset-bottom,0));max-width:560px;margin:auto;padding:12px 14px;border-radius:12px;background:var(--ink);color:var(--bg);font-size:14px;opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s}
+.toast.on{opacity:1;transform:none}
+.toast.err{background:var(--err);color:#fff}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Gitdrop</h1>
+  <div>
+    <button class="icon" id="bHist" aria-label="History"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg></button>
+    <button class="icon" id="bSet" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </div>
+</header>
+
+<main>
+  <section>
+    <label>Repository
+      <input id="repo" list="repos" placeholder="username/repo" autocapitalize="off" autocorrect="off" spellcheck="false">
+    </label>
+    <datalist id="repos"></datalist>
+    <div class="row">
+      <label>Branch<input id="branch" placeholder="default" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+      <label>Folder in repo<input id="prefix" placeholder="root" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+    </div>
+    <button class="link" id="bNew">Create a new repository</button>
+  </section>
+
+  <section>
+    <input type="file" id="file" multiple hidden>
+    <button class="pick" id="bPick">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+      Choose files or a .zip
+      <small>Add more any time</small>
+    </button>
+    <div class="seg" role="group" aria-label="Organise">
+      <button id="mType" aria-pressed="true">Sort by type</button>
+      <button id="mKeep" aria-pressed="false">Keep as is</button>
+    </div>
+    <label class="sw">Skip duplicates<input type="checkbox" id="optDup" checked></label>
+    <label class="sw">Unzip .zip files<input type="checkbox" id="optZip" checked></label>
+  </section>
+
+  <section>
+    <div class="sum"><h2 id="sumT">Files</h2><button class="link" id="bClear" hidden>Clear all</button></div>
+    <div id="list"><p class="empty">No files yet. Choose some above.</p></div>
+  </section>
+</main>
+
+<footer class="bar">
+  <div class="prog" id="prog"></div>
+  <div>
+    <input id="msg" placeholder="Commit message" aria-label="Commit message">
+    <button class="btn pri" id="bPush" disabled>Push</button>
+  </div>
+</footer>
+<div class="toast" id="toast" role="status"></div>
+
+<dialog id="dSet">
+  <h2>Settings</h2>
+  <label>GitHub token<input type="password" id="token" placeholder="github_pat_… or ghp_…" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+  <p class="hint">Saved only on this device and sent only to GitHub. <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Make a token</a> with Contents: read &amp; write. To create repos from here, add Administration: write, or use a classic token with the repo scope.</p>
+  <div class="acts"><button class="btn pri" id="bSave">Save and check</button></div>
+  <p class="hint" id="who"></p>
+  <h2 style="margin-top:20px">Sorting rules</h2>
+  <p class="hint" style="margin:0 0 10px">The first matching rule wins. Anything else goes to “other”.</p>
+  <div id="rules"></div>
+  <div class="acts"><button class="btn" id="bAddRule">Add rule</button><button class="btn" id="bResetRules">Reset</button></div>
+  <div class="acts"><button class="btn" data-close>Done</button></div>
+</dialog>
+
+<dialog id="dHist"><h2>Push history</h2><div id="hist"></div><div class="acts"><button class="btn" id="bClrHist">Clear</button><button class="btn" data-close>Close</button></div></dialog>
+
+<dialog id="dNew">
+  <h2>New repository</h2>
+  <label>Name<input id="nName" placeholder="my-files" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+  <label class="sw">Private<input type="checkbox" id="nPriv" checked></label>
+  <div class="acts"><button class="btn" data-close>Cancel</button><button class="btn pri" id="bCreate">Create</button></div>
+</dialog>
+
+<dialog id="dEdit">
+  <h2>Edit file</h2>
+  <label>Name<input id="eName" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+  <label>Folder<input id="eFolder" placeholder="root" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+  <div class="acts"><button class="btn" id="eDel">Remove</button><button class="btn pri" id="eSave">Save</button></div>
+</dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DEF_RULES=[
+ {f:'images',e:'jpg,jpeg,png,gif,webp,svg,heic,bmp,ico'},
+ {f:'docs',e:'pdf,doc,docx,txt,md,rtf,odt,ppt,pptx'},
+ {f:'data',e:'csv,json,xlsx,xls,xml,yaml,yml,sql'},
+ {f:'code',e:'js,ts,jsx,tsx,py,html,css,java,c,cpp,go,rs,sh,php,rb,swift,kt'},
+ {f:'media',e:'mp3,mp4,mov,wav,m4a,webm'},
+ {f:'archives',e:'rar,7z,tar,gz'}];
+let rules=store.get('rules',DEF_RULES), mode=store.get('mode','type'), files=[], editing=null, busy=false, uid=0;
+let cfg={token:store.get('token',''),repo:store.get('repo',''),branch:store.get('branch',''),prefix:store.get('prefix','')};
+
+function toast(m,err){const t=$('#toast');t.textContent=m;t.className='toast on'+(err?' err':'');clearTimeout(toast.t);toast.t=setTimeout(()=>t.className='toast',err?5000:2600)}
+const size=n=>n<1024?n+' B':n<1048576?(n/1024).toFixed(0)+' KB':(n/1048576).toFixed(1)+' MB';
+const clean=s=>s.replace(/[\\:*?"<>|]/g,'-').replace(/^\/+|\/+$/g,'').trim();
+const ext=n=>{const i=n.lastIndexOf('.');return i>0?n.slice(i+1).toLowerCase():''};
+
+function folderOf(it){
+  if(it.mf!=null)return it.mf;
+  if(mode==='keep')return it.dir;
+  const x=ext(it.name);
+  for(const r of rules){if(r.e.split(',').map(s=>s.trim().toLowerCase()).includes(x))return r.f}
+  return 'other';
+}
+const join=(...p)=>p.map(s=>clean(s||'')).filter(Boolean).join('/');
+const pathOf=it=>join(cfg.prefix,folderOf(it),it.name);
+
+/* ---------- adding files ---------- */
+async function addFiles(list){
+  const out=[];
+  for(const f of list){
+    if(/\.zip$/i.test(f.name)&&$('#optZip').checked&&window.JSZip){
+      try{
+        const z=await JSZip.loadAsync(f);
+        for(const e of Object.values(z.files)){
+          if(e.dir||/(^|\/)(__MACOSX|\.DS_Store)/.test(e.name))continue;
+          const parts=e.name.split('/'),name=parts.pop();
+          out.push({name,dir:parts.join('/'),blob:await e.async('blob')});
+        }
+        continue;
+      }catch{toast('Couldn’t open '+f.name+'. Added as a file.',1)}
+    }
+    out.push({name:f.name,dir:'',blob:f});
+  }
+  for(const o of out)files.push({id:++uid,name:clean(o.name)||'file',dir:o.dir,blob:o.blob,size:o.blob.size,sha:null,mf:null});
+  render();
+  for(const it of files)if(!it.sha){it.sha=await gitSha(it.blob);}
+  render();
+}
+async function gitSha(b){
+  const h=new TextEncoder().encode('blob '+b.size+'\0'),buf=new Uint8Array(await b.arrayBuffer()),all=new Uint8Array(h.length+buf.length);
+  all.set(h);all.set(buf,h.length);
+  return[...new Uint8Array(await crypto.subtle.digest('SHA-1',all))].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+const b64=b=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(b)});
+
+/* ---------- render ---------- */
+function dupSet(){
+  const seen=new Set(),d=new Set();
+  for(const it of files){if(!it.sha)continue;if(seen.has(it.sha))d.add(it.id);else seen.add(it.sha)}
+  return d;
+}
+function render(){
+  const d=dupSet(),skip=$('#optDup').checked,keep=files.filter(i=>!(skip&&d.has(i.id)));
+  $('#sumT').textContent=files.length?files.length+(files.length===1?' file':' files')+' · '+size(files.reduce((a,b)=>a+b.size,0)):'Files';
+  $('#bClear').hidden=!files.length;
+  $('#bPush').disabled=busy||!keep.length;
+  if(!busy)$('#bPush').textContent=keep.length?'Push '+keep.length:'Push';
+  $('#mType').setAttribute('aria-pressed',mode==='type');$('#mKeep').setAttribute('aria-pressed',mode==='keep');
+  if(!files.length){$('#list').innerHTML='<p class="empty">No files yet. Choose some above.</p>';return}
+  const g={};for(const it of files){(g[folderOf(it)||'(root)']??=[]).push(it)}
+  $('#list').innerHTML=Object.keys(g).sort().map(k=>`<div class="grp">${esc(k)}/<i>${g[k].length}</i></div>`+g[k].map(it=>`<button class="f${skip&&d.has(it.id)?' dup':''}" data-id="${it.id}"><b>${esc(it.name)}</b>${d.has(it.id)?'<span class="tag">duplicate</span>':''}<small>${size(it.size)}</small></button>`).join('')).join('');
+}
+
+/* ---------- GitHub ---------- */
+async function gh(path,o={}){
+  if(!cfg.token)throw new Error('Add your GitHub token in Settings first.');
+  const r=await fetch('https://api.github.com'+path,{...o,headers:{Authorization:'Bearer '+cfg.token,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'}});
+  if(!r.ok){let m='';try{m=(await r.json()).message}catch{}const e=new Error(m||r.statusText);e.status=r.status;throw e}
+  return r.status===204?null:r.json();
+}
+async function loadRepos(){
+  try{const l=await gh('/user/repos?sort=pushed&per_page=100');$('#repos').innerHTML=l.map(r=>`<option value="${esc(r.full_name)}">`).join('')}catch{}
+}
+const prog=p=>$('#prog').style.width=p+'%';
+
+async function push(){
+  if(busy)return;
+  const repo=cfg.repo.trim();
+  if(!/^[\w.-]+\/[\w.-]+$/.test(repo))return toast('Enter the repository as username/repo.',1);
+  busy=true;$('#bPush').disabled=true;
+  try{
+    $('#bPush').textContent='Checking…';prog(3);
+    const info=await gh(`/repos/${repo}`);
+    const branch=cfg.branch.trim()||info.default_branch;
+    let base=await getHead(repo,branch,info.default_branch);
+    const commit=await gh(`/repos/${repo}/git/commits/${base}`);
+    const tree=await gh(`/repos/${repo}/git/trees/${commit.tree.sha}?recursive=1`);
+    const have=new Map((tree.tree||[]).filter(t=>t.type==='blob').map(t=>[t.path,t.sha]));
+
+    const skip=$('#optDup').checked,seen=new Set(),used=new Set(),items=[];
+    for(const it of files){
+      if(!it.sha)it.sha=await gitSha(it.blob);
+      if(skip&&seen.has(it.sha))continue;
+      seen.add(it.sha);
+      let p=pathOf(it);
+      if(skip&&have.get(p)===it.sha)continue;
+      if(used.has(p)){const i=p.lastIndexOf('.'),s=i>p.lastIndexOf('/')+1?i:p.length;let n=2;while(used.has(p.slice(0,s)+' ('+n+')'+p.slice(s)))n++;p=p.slice(0,s)+' ('+n+')'+p.slice(s)}
+      used.add(p);items.push({path:p,it});
+    }
+    if(!items.length){toast('Nothing new to push. Everything is already in the repo.');return}
+
+    let done=0;const entries=[],q=[...items];
+    const worker=async()=>{
+      while(q.length){
+        const {path,it}=q.shift();
+        const b=await gh(`/repos/${repo}/git/blobs`,{method:'POST',body:JSON.stringify({content:await b64(it.blob),encoding:'base64'})});
+        entries.push({path,mode:'100644',type:'blob',sha:b.sha});
+        done++;$('#bPush').textContent=`Uploading ${done}/${items.length}`;prog(5+done/items.length*85);
+      }
+    };
+    await Promise.all([worker(),worker(),worker()]);
+
+    $('#bPush').textContent='Committing…';prog(94);
+    const nt=await gh(`/repos/${repo}/git/trees`,{method:'POST',body:JSON.stringify({base_tree:commit.tree.sha,tree:entries})});
+    const msg=$('#msg').value.trim()||`Add ${items.length} file${items.length>1?'s':''} via Gitdrop`;
+    const nc=await gh(`/repos/${repo}/git/commits`,{method:'POST',body:JSON.stringify({message:msg,tree:nt.sha,parents:[base]})});
+    await gh(`/repos/${repo}/git/refs/heads/${encodeURIComponent(branch).replace(/%2F/g,'/')}`,{method:'PATCH',body:JSON.stringify({sha:nc.sha})});
+    prog(100);
+
+    const h=store.get('hist',[]);h.unshift({t:Date.now(),repo,branch,n:items.length,msg,url:`https://github.com/${repo}/commit/${nc.sha}`});store.set('hist',h.slice(0,30));
+    files=[];$('#msg').value='';render();toast(`Pushed ${items.length} file${items.length>1?'s':''} to ${repo}`);
+  }catch(e){
+    toast(e.status===401?'GitHub rejected the token. Check it in Settings.':e.status===403||e.status===404?'No access to that repo. Check the name and token permissions. ('+e.message+')':e.message,1);
+  }finally{busy=false;setTimeout(()=>prog(0),600);render()}
+}
+async function getHead(repo,branch,def){
+  const ref=async b=>(await gh(`/repos/${repo}/git/ref/heads/${encodeURIComponent(b).replace(/%2F/g,'/')}`)).object.sha;
+  try{return await ref(branch)}catch(e){
+    if(e.status!==404&&e.status!==409)throw e;
+  }
+  let sha;
+  try{sha=await ref(def)}catch(e){
+    if(e.status!==404&&e.status!==409)throw e;
+    // empty repo: create the first commit so the Git API can be used
+    await gh(`/repos/${repo}/contents/README.md`,{method:'PUT',body:JSON.stringify({message:'Initial commit',content:btoa('# '+repo.split('/')[1]+'\n')})});
+    sha=await ref(def);
+  }
+  if(branch===def)return sha;
+  await gh(`/repos/${repo}/git/refs`,{method:'POST',body:JSON.stringify({ref:'refs/heads/'+branch,sha})});
+  return sha;
+}
+
+/* ---------- UI wiring ---------- */
+for(const k of['repo','branch','prefix']){const el=$('#'+k);el.value=cfg[k];el.addEventListener('input',()=>{cfg[k]=el.value;store.set(k,el.value);render()})}
+$('#bPick').onclick=()=>$('#file').click();
+$('#file').onchange=e=>{const l=[...e.target.files];e.target.value='';if(l.length)addFiles(l)};
+$('#optDup').onchange=render;
+$('#mType').onclick=()=>{mode='type';store.set('mode',mode);render()};
+$('#mKeep').onclick=()=>{mode='keep';store.set('mode',mode);render()};
+$('#bClear').onclick=()=>{files=[];render()};
+$('#bPush').onclick=push;
+$('#list').onclick=e=>{
+  const b=e.target.closest('.f');if(!b)return;
+  editing=files.find(i=>i.id==b.dataset.id);
+  $('#eName').value=editing.name;$('#eFolder').value=folderOf(editing);$('#dEdit').showModal();
+};
+$('#eSave').onclick=()=>{
+  const n=clean($('#eName').value);if(n)editing.name=n;
+  const f=clean($('#eFolder').value);if(f!==folderOf(editing))editing.mf=f;
+  $('#dEdit').close();render();
+};
+$('#eDel').onclick=()=>{files=files.filter(i=>i!==editing);$('#dEdit').close();render()};
+
+document.querySelectorAll('dialog').forEach(d=>{
+  d.addEventListener('click',e=>{if(e.target===d||e.target.hasAttribute('data-close'))d.close()});
+});
+
+/* settings */
+function drawRules(){
+  $('#rules').innerHTML=rules.map((r,i)=>`<div class="rule"><label>Folder<input data-i="${i}" data-k="f" value="${esc(r.f)}" autocapitalize="off"></label><label>Extensions<input data-i="${i}" data-k="e" value="${esc(r.e)}" autocapitalize="off"></label><button class="icon" data-del="${i}" aria-label="Delete rule"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`).join('');
+}
+$('#rules').addEventListener('input',e=>{const i=e.target.dataset.i;if(i==null)return;rules[i][e.target.dataset.k]=e.target.value;store.set('rules',rules);render()});
+$('#rules').addEventListener('click',e=>{const b=e.target.closest('[data-del]');if(!b)return;rules.splice(+b.dataset.del,1);store.set('rules',rules);drawRules();render()});
+$('#bAddRule').onclick=()=>{rules.push({f:'',e:''});store.set('rules',rules);drawRules()};
+$('#bResetRules').onclick=()=>{rules=JSON.parse(JSON.stringify(DEF_RULES));store.set('rules',rules);drawRules();render()};
+$('#bSet').onclick=()=>{$('#token').value=cfg.token;drawRules();$('#dSet').showModal()};
+$('#bSave').onclick=async()=>{
+  cfg.token=$('#token').value.trim();store.set('token',cfg.token);
+  $('#who').textContent='Checking…';
+  try{const u=await gh('/user');$('#who').textContent='Signed in as '+u.login+'.';loadRepos()}
+  catch(e){$('#who').textContent=e.status===401?'GitHub rejected this token.':e.message}
+};
+
+/* history */
+$('#bHist').onclick=()=>{
+  const h=store.get('hist',[]);
+  $('#hist').innerHTML=h.length?h.map(x=>`<div class="h"><a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.msg)}</a><small>${esc(x.repo)} · ${esc(x.branch)} · ${x.n} file${x.n>1?'s':''} · ${new Date(x.t).toLocaleString()}</small></div>`).join(''):'<p class="empty">No pushes yet.</p>';
+  $('#dHist').showModal();
+};
+$('#bClrHist').onclick=()=>{store.set('hist',[]);$('#bHist').click()};
+
+/* new repo */
+$('#bNew').onclick=()=>{
+  if(!cfg.token){toast('Add your GitHub token in Settings first.',1);return}
+  $('#dNew').showModal();
+};
+$('#bCreate').onclick=async()=>{
+  const name=$('#nName').value.trim();if(!/^[\w.-]+$/.test(name))return toast('Use letters, numbers, dots, dashes or underscores.',1);
+  $('#bCreate').disabled=true;
+  try{
+    const r=await gh('/user/repos',{method:'POST',body:JSON.stringify({name,private:$('#nPriv').checked})});
+    cfg.repo=r.full_name;cfg.branch='';$('#repo').value=cfg.repo;$('#branch').value='';store.set('repo',cfg.repo);store.set('branch','');
+    $('#dNew').close();toast('Created '+r.full_name);loadRepos();
+  }catch(e){toast(e.status===403||e.status===404?'The token can’t create repos. Add Administration: write or use a classic token.':e.message,1)}
+  finally{$('#bCreate').disabled=false}
+};
+
+render();
+if(cfg.token)loadRepos();else setTimeout(()=>$('#bSet').click(),400);
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script>
+</body>
+</html>
